@@ -11,29 +11,51 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages). 
 -->
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+模拟系统`Hero`实现的购物车抛物线动画
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+轻松实现购物车抛物线动画
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+```ymal
+  fling:
+    git: https://github.com/changleibox/fling.git
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
+实现抛物线动画`flightShuttleBuilder`. 
 
 ```dart
-const like = 'sample';
+FlightShuttleTransition(
+  fromFlingContext: fromFlingContext,
+  toFlingContext: toFlingContext,
+  fromFlingLocation: fromFlingLocation,
+  toFlingLocation: toFlingLocation,
+  factor: animation,
+  interpolator: (end, t) {
+    // 二阶贝塞尔曲线
+    final Offset control;
+    if (end.dx == 0 || end.dy == 0) {
+      control = Offset.zero;
+    } else if (end.dy < 0) {
+      control = Offset(0, end.dy);
+    } else {
+      control = Offset(end.dx, 0);
+    }
+    return control * 2 * t * (1 - t) + end * math.pow(t, 2).toDouble();
+  },
+  builder: (context, bounds, edgeValue, middleValue, fling) {
+    final child = (fling.child as _ContextBuilder).child as _ColorBlock;
+    return _ColorBlock.fromSize(
+      size: Size.lerp(_flightShuttleSize, bounds.size, edgeValue),
+      color: Color.lerp(_flightShuttleColor, child.color, edgeValue),
+      radius: Radius.lerp(_flightShuttleRadius, child.radius, edgeValue),
+      child: edgeValue == 0 ? _flightShuttleChild : child.child,
+    );
+  },
+);
 ```
 
-## Additional information
-
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
