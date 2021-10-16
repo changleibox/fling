@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 typedef FlightShuttleBuilder = Widget Function(
   BuildContext context,
   Rect bounds,
+  double value,
   double edgeValue,
   double middleValue,
   Fling fling,
@@ -89,10 +90,11 @@ class FlightShuttleTransition extends AnimatedWidget {
     final endOffset = toFlingLocation.center - fromFlingLocation.center;
     final transformed = interpolator?.call(endOffset, middleValue) ?? endOffset * middleValue;
 
+    final value = factor.value;
     return Center(
       child: Transform.translate(
-        offset: transformed - endOffset * factor.value,
-        child: builder(context, bounds, edgeValue, middleValue, fling),
+        offset: transformed - endOffset * value,
+        child: builder(context, bounds, value, edgeValue, middleValue, fling),
       ),
     );
   }
