@@ -20,8 +20,8 @@ and the Flutter guide for
 ## Getting started
 
 ```ymal
-  fling:
-    git: https://github.com/changleibox/fling.git
+fling:
+  git: https://github.com/changleibox/fling.git
 ```
 
 ## Usage
