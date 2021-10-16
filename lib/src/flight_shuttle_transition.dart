@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2021 CHANGLEI. All rights reserved.
+ */
+
 import 'dart:math' as math;
 
 import 'package:fling/src/flings.dart';
