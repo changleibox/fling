@@ -16,7 +16,7 @@ typedef FlightShuttleBuilder = Widget Function(
 );
 
 /// 插值器
-typedef FlightShuttleInterpolator = Offset Function(Offset end, double t);
+typedef FlightShuttleInterpolator = Offset Function(Offset offset, double t);
 
 /// Created by box on 2021/10/16.
 ///
