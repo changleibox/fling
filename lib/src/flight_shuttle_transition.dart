@@ -2,8 +2,6 @@
  * Copyright (c) 2021 CHANGLEI. All rights reserved.
  */
 
-import 'dart:math' as math;
-
 import 'package:fling/src/flings.dart';
 import 'package:flutter/material.dart';
 
@@ -94,10 +92,7 @@ class FlightShuttleTransition extends AnimatedWidget {
     return Center(
       child: Transform.translate(
         offset: transformed - endOffset * factor.value,
-        child: Transform.rotate(
-          angle: middleAnimation.value * math.pi * 2.0,
-          child: builder(context, bounds, edgeValue, middleValue, fling),
-        ),
+        child: builder(context, bounds, edgeValue, middleValue, fling),
       ),
     );
   }
