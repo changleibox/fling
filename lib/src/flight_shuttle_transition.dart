@@ -16,7 +16,7 @@ typedef FlightShuttleBuilder = Widget Function(
 );
 
 /// 插值器
-typedef FlightShuttleInterpolator = Offset Function(Offset offset, double t);
+typedef FlightShuttleInterpolator = Offset Function(double t);
 
 /// Created by box on 2021/10/16.
 ///
@@ -88,7 +88,7 @@ class FlightShuttleTransition extends AnimatedWidget {
 
     final middleValue = middleAnimation.value;
     final endOffset = toFlingLocation.center - fromFlingLocation.center;
-    final transformed = interpolator?.call(endOffset, middleValue) ?? endOffset * middleValue;
+    final transformed = interpolator?.call(middleValue) ?? endOffset * middleValue;
 
     final value = factor.value;
     return Center(
