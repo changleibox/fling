@@ -87,7 +87,7 @@ class FlightShuttleTransition extends AnimatedWidget {
 
     final middleValue = middleAnimation.value;
     final endOffset = toFlingLocation.center - fromFlingLocation.center;
-    final transformed = interpolator?.call(endOffset, middleValue) ?? endOffset;
+    final transformed = interpolator?.call(endOffset, middleValue) ?? endOffset * middleValue;
 
     return Center(
       child: Transform.translate(
