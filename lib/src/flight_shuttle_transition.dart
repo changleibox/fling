@@ -32,17 +32,20 @@ class FlightShuttleTransition extends AnimatedWidget {
     required this.toFlingLocation,
     required this.builder,
     required Animation<double> factor,
+    Interval startInterval = const Interval(0, 0),
+    Interval middleInterval = const Interval(0, 1),
+    Interval endInterval = const Interval(0, 0),
     this.interpolator,
   })  : fromFling = fromFlingContext.widget as Fling,
         toFling = toFlingContext.widget as Fling,
         startAnimation = CurveTween(
-          curve: const Interval(0.0, 0.2, curve: Curves.easeInOut),
+          curve: startInterval,
         ).animate(factor),
         middleAnimation = CurveTween(
-          curve: const Interval(0.2, 0.7, curve: Curves.linear),
+          curve: middleInterval,
         ).animate(factor),
         endAnimation = CurveTween(
-          curve: const Interval(0.7, 1.0, curve: Curves.easeOut),
+          curve: endInterval,
         ).animate(factor),
         super(key: key, listenable: factor);
 
