@@ -604,9 +604,6 @@ class FlingNavigator extends StatefulWidget {
   /// A list of observers for this navigator.
   final List<FlingNavigatorObserver> observers;
 
-  /// [FlingNavigator.boundary]
-  static Object get boundaryTag => _rootBoundaryTag;
-
   /// This method can be expensive (it walks the element tree).
   static FlingNavigatorState of(
     BuildContext context, {
@@ -802,28 +799,39 @@ class FlingBoundary extends StatefulWidget {
   final Object tag;
 
   /// This method can be expensive (it walks the element tree).
+  static Object rootTagOf(BuildContext context) {
+    return rootOf(context).widget.tag;
+  }
+
+  /// This method can be expensive (it walks the element tree).
+  static FlingBoundaryState rootOf(BuildContext context) {
+    return of(context, tag: _rootBoundaryTag);
+  }
+
+  /// This method can be expensive (it walks the element tree).
   static FlingBoundaryState of(
     BuildContext context, {
     Object? tag,
-    bool rootBoundary = false,
   }) {
     // Handles the case where the input context is a boundary element.
     FlingBoundaryState? boundary;
-    if (tag == FlingNavigator.boundaryTag || rootBoundary) {
+    if (tag == _rootBoundaryTag) {
       boundary = FlingNavigator.of(context).boundary;
     } else if (tag != null) {
       boundary = _allBoundariesFor(context)[tag];
+    } else {
+      if (boundary == null && context is StatefulElement && context.state is FlingBoundaryState) {
+        boundary = context.state as FlingBoundaryState;
+      }
+      boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
     }
-    if (boundary == null && context is StatefulElement && context.state is FlingBoundaryState) {
-      boundary = context.state as FlingBoundaryState;
-    }
-    boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
 
+    final target = tag == null ? 'context' : 'tag: $tag';
     assert(() {
       if (boundary == null) {
         throw FlutterError(
-          'FlingBoundary operation requested with a context that does not include a FlingBoundary.\n'
-          'The context used to push boundaries from the FlingBoundary must be that of a '
+          'FlingBoundary operation requested with a $target that does not include a FlingBoundary.\n'
+          'The $target used to push boundaries from the FlingBoundary must be that of a '
           'widget that is a descendant of a FlingBoundary widget.',
         );
       }
