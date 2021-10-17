@@ -836,7 +836,6 @@ class FlingBoundary extends StatefulWidget {
   // should be considered for animation when `navigator` transitions from one
   // FlingBoundary to another.
   static Map<Object, FlingBoundaryState> _allBoundariesFor(BuildContext context) {
-    final navigator = FlingNavigator.of(context);
     final result = <Object, FlingBoundaryState>{};
 
     void inviteFling(StatefulElement boundary, Object tag) {
@@ -874,7 +873,7 @@ class FlingBoundary extends StatefulWidget {
       element.visitChildren(visitor);
     }
 
-    navigator.context.visitChildElements(visitor);
+    FlingNavigator.of(context).context.visitChildElements(visitor);
     return result;
   }
 
