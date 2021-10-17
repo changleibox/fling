@@ -799,14 +799,7 @@ class FlingBoundary extends StatefulWidget {
   final Object tag;
 
   /// This method can be expensive (it walks the element tree).
-  static Object rootTagOf(BuildContext context) {
-    return rootOf(context).widget.tag;
-  }
-
-  /// This method can be expensive (it walks the element tree).
-  static FlingBoundaryState rootOf(BuildContext context) {
-    return of(context, tag: _rootBoundaryTag);
-  }
+  static Object get rootBoundaryTag => _rootBoundaryTag;
 
   /// This method can be expensive (it walks the element tree).
   static FlingBoundaryState of(
@@ -815,7 +808,7 @@ class FlingBoundary extends StatefulWidget {
   }) {
     // Handles the case where the input context is a boundary element.
     FlingBoundaryState? boundary;
-    if (tag == _rootBoundaryTag) {
+    if (tag == rootBoundaryTag) {
       boundary = FlingNavigator.of(context).boundary;
     } else if (tag != null) {
       boundary = _allBoundariesFor(context)[tag];
