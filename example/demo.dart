@@ -2,6 +2,8 @@
  * Copyright (c) 2021 CHANGLEI. All rights reserved.
  */
 
+import 'dart:math' as math;
+
 import 'package:fling/fling.dart';
 import 'package:fling/src/bessel_fling.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,11 +11,15 @@ import 'package:flutter/material.dart';
 
 const _flightShuttleSize = Size.square(40);
 const _flightShuttleRadius = Radius.circular(20);
-const _flightShuttleColor = Colors.indigo;
-const _flightShuttleChild = FlutterLogo(
-  size: 40,
-  textColor: Colors.white,
+const _flightShuttleColor = Colors.red;
+const _flightShuttleChild = Icon(
+  Icons.flight,
+  size: 30,
+  color: Colors.white,
 );
+const _beginInterval = Interval(0.0, 0.2, curve: Curves.easeInOut);
+const _middleInterval = Interval(0.2, 0.7, curve: Curves.linear);
+const _endInterval = Interval(0.7, 1.0, curve: Curves.easeOut);
 
 /// Created by changlei on 2020/7/6.
 ///
@@ -126,35 +132,30 @@ class _FlingBlock extends StatelessWidget {
 
   final ValueChanged<BuildContext>? onPressed;
 
-  static Widget _buildFlightShuttle(
-    BuildContext context,
-    double value,
-    double edgeValue,
-    double middleValue,
-    Fling fling,
-  ) {
-    final child = (fling.child as _ContextBuilder).child as _ColorBlock;
-    return _ColorBlock.fromSize(
-      size: Size.infinite,
-      color: Color.lerp(_flightShuttleColor, child.color, edgeValue),
-      radius: Radius.lerp(_flightShuttleRadius, child.radius, edgeValue),
-      child: edgeValue == 0 ? _flightShuttleChild : child.child,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Center(
       child: BesselFling(
         tag: tag,
-        beginCurve: const Interval(0.0, 0.2, curve: Curves.easeInOut),
-        middleCurve: const Interval(0.2, 0.7, curve: Curves.linear),
-        endCurve: const Interval(0.7, 1.0, curve: Curves.easeOut),
+        beginCurve: _beginInterval,
+        middleCurve: _middleInterval,
+        endCurve: _endInterval,
         flightSize: _flightShuttleSize,
-        placeholderBuilder: (context, flingSize, child) {
-          return child;
+        flightShuttleBuilder: (context, value, edgeValue, middleValue, fling) {
+          final child = (fling.child as _ContextBuilder).child as _ColorBlock;
+          return Transform.rotate(
+            angle: middleValue * math.pi * 2.0,
+            child: _ColorBlock.fromSize(
+              size: Size.infinite,
+              color: Color.lerp(_flightShuttleColor, child.color, edgeValue),
+              radius: Radius.lerp(_flightShuttleRadius, child.radius, edgeValue),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 100),
+                child: edgeValue == 0 ? _flightShuttleChild : child.child,
+              ),
+            ),
+          );
         },
-        flightShuttleBuilder: _buildFlightShuttle,
         child: _ContextBuilder(
           onPressed: onPressed,
           child: _ColorBlock(
