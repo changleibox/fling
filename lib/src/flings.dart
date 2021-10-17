@@ -185,7 +185,11 @@ class Fling extends StatefulWidget {
         }
         return true;
       }());
-      result[tag] = fling.state as FlingState;
+      final flingState = fling.state as FlingState;
+      if (context.widget is FlingNavigator && flingState.boundary != null) {
+        return;
+      }
+      result[tag] = flingState;
     }
 
     void visitor(Element element) {
@@ -205,8 +209,8 @@ class Fling extends StatefulWidget {
   }
 
   /// push
-  static void push(BuildContext context, {Object? boundaryTag, Object? tag}) {
-    Fling.of(context).push(context, boundaryTag: boundaryTag, tag: tag);
+  static void push(BuildContext context, {Object? boundaryTag, Object? tag, bool rootNavigator = false}) {
+    Fling.of(context).push(context, boundaryTag: boundaryTag, tag: tag, rootNavigator: rootNavigator);
   }
 
   @override
@@ -239,10 +243,10 @@ class FlingState extends State<Fling> {
   FlingBoundaryState? get boundary => FlingBoundary.maybeOf(context);
 
   /// push
-  void push(BuildContext context, {Object? boundaryTag, Object? tag}) {
+  void push(BuildContext context, {Object? boundaryTag, Object? tag, bool rootNavigator = false}) {
     FlingNavigator.of(context)._push(
       fromBoundary: boundary,
-      toBoundary: FlingBoundary._boundaryFor(context, boundaryTag),
+      toBoundary: rootNavigator ? null : FlingBoundary._boundaryFor(context, boundaryTag),
       tag: tag ?? widget.tag,
       fromFling: this,
     );
@@ -596,20 +600,13 @@ class FlingNavigator extends StatefulWidget {
   final List<FlingNavigatorObserver> observers;
 
   /// This method can be expensive (it walks the element tree).
-  static FlingNavigatorState of(
-    BuildContext context, {
-    bool rootNavigator = false,
-  }) {
+  static FlingNavigatorState of(BuildContext context) {
     // Handles the case where the input context is a navigator element.
     FlingNavigatorState? navigator;
     if (context is StatefulElement && context.state is FlingNavigatorState) {
       navigator = context.state as FlingNavigatorState;
     }
-    if (rootNavigator) {
-      navigator = context.findRootAncestorStateOfType<FlingNavigatorState>() ?? navigator;
-    } else {
-      navigator = navigator ?? context.findAncestorStateOfType<FlingNavigatorState>();
-    }
+    navigator = navigator ?? context.findAncestorStateOfType<FlingNavigatorState>();
 
     assert(() {
       if (navigator == null) {
@@ -796,6 +793,11 @@ class FlingNavigatorState extends State<FlingNavigator> with TickerProviderState
 
   @override
   Widget build(BuildContext context) {
+    assert(
+      context.findAncestorWidgetOfExactType<FlingNavigator>() == null,
+      'A FlingNavigator widget cannot be the descendant of another FlingNavigator widget.',
+    );
+
     return Overlay(
       key: _overlayKey,
       initialEntries: [
@@ -825,12 +827,9 @@ class FlingBoundary extends StatefulWidget {
   final Object tag;
 
   /// This method can be expensive (it walks the element tree).
-  static FlingBoundaryState of(
-    BuildContext context, {
-    bool rootBoundary = false,
-  }) {
+  static FlingBoundaryState of(BuildContext context) {
     // Handles the case where the input context is a boundary element.
-    final boundary = maybeOf(context, rootBoundary: rootBoundary);
+    final boundary = maybeOf(context);
 
     assert(() {
       if (boundary == null) {
@@ -846,20 +845,13 @@ class FlingBoundary extends StatefulWidget {
   }
 
   /// This method can be expensive (it walks the element tree).
-  static FlingBoundaryState? maybeOf(
-    BuildContext context, {
-    bool rootBoundary = false,
-  }) {
+  static FlingBoundaryState? maybeOf(BuildContext context) {
     // Handles the case where the input context is a boundary element.
     FlingBoundaryState? boundary;
     if (context is StatefulElement && context.state is FlingBoundaryState) {
       boundary = context.state as FlingBoundaryState;
     }
-    if (rootBoundary) {
-      boundary = context.findRootAncestorStateOfType<FlingBoundaryState>() ?? boundary;
-    } else {
-      boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
-    }
+    boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
     return boundary;
   }
 
@@ -908,14 +900,27 @@ class FlingBoundary extends StatefulWidget {
     }
 
     FlingNavigator.of(context).context.visitChildElements(visitor);
-    return result[tag];
+
+    final boundary = result[tag];
+    assert(() {
+      if (boundary == null) {
+        throw FlutterError(
+          'FlingBoundary operation requested with a tag that does not include a FlingBoundary.\n'
+          'The tag used to push boundarys from the FlingBoundary must be that of a '
+          'widget that is a descendant of a FlingBoundary widget.',
+        );
+      }
+      return true;
+    }());
+    return boundary;
   }
 
   /// push
-  static void push(BuildContext context, {Object? boundaryTag, required Object tag}) {
+  static void push(BuildContext context, {Object? boundaryTag, required Object tag, bool rootNavigator = false}) {
     FlingBoundary.of(context).push(
       boundary: boundaryTag == null ? null : FlingBoundary._boundaryFor(context, boundaryTag),
       tag: tag,
+      rootNavigator: rootNavigator,
     );
   }
 
@@ -935,8 +940,8 @@ class FlingBoundaryState extends State<FlingBoundary> with TickerProviderStateMi
   FlingNavigatorState get navigator => FlingNavigator.of(context);
 
   /// push
-  void push({FlingBoundaryState? boundary, required Object tag}) {
-    navigator.push(fromBoundary: this, toBoundary: boundary ?? this, tag: tag);
+  void push({FlingBoundaryState? boundary, required Object tag, bool rootNavigator = false}) {
+    navigator.push(fromBoundary: this, toBoundary: rootNavigator ? null : (boundary ?? this), tag: tag);
   }
 
   /// Whether this route is currently offstage.
@@ -965,6 +970,11 @@ class FlingBoundaryState extends State<FlingBoundary> with TickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
+    assert(
+      context.findAncestorWidgetOfExactType<FlingBoundary>() == null,
+      'A FlingBoundary widget cannot be the descendant of another FlingBoundary widget.',
+    );
+
     return widget.child;
   }
 }
@@ -1062,7 +1072,13 @@ class FlingController extends FlingNavigatorObserver {
     // If `fromSubtreeContext` is null, call endFlight on all toFlings, for good measure.
     // If `toSubtreeContext` is null abort existingFlights.
     final fromFlings = Fling._allFlingsFor(from?.context ?? navigatorContext);
+    if (fromFlings[tag] == null && from != null) {
+      fromFlings.addAll(Fling._allFlingsFor(navigatorContext));
+    }
     final toFlings = Fling._allFlingsFor(to?.context ?? navigatorContext);
+    if (toFlings[tag] == null && to != null) {
+      toFlings.addAll(Fling._allFlingsFor(navigatorContext));
+    }
 
     void flight(FlingState? fromFling, FlingState? toFling) {
       if (fromFling == null) {
