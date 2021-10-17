@@ -13,7 +13,8 @@ typedef BesselFlightShuttleBuilder = Widget Function(
   double value,
   double edgeValue,
   double middleValue,
-  Fling fling,
+  BuildContext fromFlingContext,
+  BuildContext toFlingContext,
 );
 
 /// Created by box on 2021/10/17.
@@ -71,8 +72,6 @@ class BesselFling extends StatelessWidget {
     BuildContext fromFlingContext,
     BuildContext toFlingContext,
   ) {
-    final fromFling = fromFlingContext.widget as Fling;
-    final toFling = toFlingContext.widget as Fling;
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
@@ -81,9 +80,15 @@ class BesselFling extends StatelessWidget {
         final middleValue = middleCurve.transform(t);
         final endValue = endCurve.transform(t);
         final edgeValue = endValue > 0 ? endValue : 1 - beginValue;
-        final fling = endValue > 0 ? toFling : fromFling;
 
-        return flightShuttleBuilder!(context, t, edgeValue, middleValue, fling);
+        return flightShuttleBuilder!(
+          context,
+          t,
+          edgeValue,
+          middleValue,
+          fromFlingContext,
+          toFlingContext,
+        );
       },
     );
   }
