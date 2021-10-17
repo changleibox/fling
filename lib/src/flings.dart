@@ -88,7 +88,7 @@ class Fling extends StatefulWidget {
   /// Optional override to supply a widget that's shown during the fling's flight.
   ///
   /// This in-flight widget can depend on the boundary transition's animation as
-  /// well as the incoming and outgoing boundarys' [Fling] descendants' widgets and
+  /// well as the incoming and outgoing boundaries' [Fling] descendants' widgets and
   /// layout.
   ///
   /// When both the source and destination [Fling]es provide a [flightShuttleBuilder],
@@ -155,7 +155,7 @@ class Fling extends StatefulWidget {
       if (fling == null) {
         throw FlutterError(
           'Fling operation requested with a context that does not include a Fling.\n'
-          'The context used to push boundarys from the Fling must be that of a '
+          'The context used to push boundaries from the Fling must be that of a '
           'widget that is a descendant of a Fling widget.',
         );
       }
@@ -215,7 +215,7 @@ class Fling extends StatefulWidget {
     required Object tag,
   }) {
     Fling.of(context).push(
-      boundary: FlingBoundary._boundaryFor(context, boundaryTag),
+      boundary: FlingBoundary.of(context, tag: boundaryTag),
       tag: tag,
     );
   }
@@ -627,7 +627,7 @@ class FlingNavigator extends StatefulWidget {
       if (navigator == null) {
         throw FlutterError(
           'FlingNavigator operation requested with a context that does not include a FlingNavigator.\n'
-          'The context used to push boundarys from the FlingNavigator must be that of a '
+          'The context used to push boundaries from the FlingNavigator must be that of a '
           'widget that is a descendant of a FlingNavigator widget.',
         );
       }
@@ -645,8 +645,8 @@ class FlingNavigator extends StatefulWidget {
     required Object toTag,
   }) {
     FlingNavigator.of(context).push(
-      fromBoundary: FlingBoundary._boundaryFor(context, fromBoundaryTag),
-      toBoundary: FlingBoundary._boundaryFor(context, toBoundaryTag),
+      fromBoundary: FlingBoundary.of(context, tag: fromBoundaryTag),
+      toBoundary: FlingBoundary.of(context, tag: toBoundaryTag),
       fromTag: fromTag,
       toTag: toTag,
     );
@@ -804,24 +804,26 @@ class FlingBoundary extends StatefulWidget {
   /// This method can be expensive (it walks the element tree).
   static FlingBoundaryState of(
     BuildContext context, {
+    Object? tag,
     bool rootBoundary = false,
   }) {
     // Handles the case where the input context is a boundary element.
     FlingBoundaryState? boundary;
-    if (context is StatefulElement && context.state is FlingBoundaryState) {
+    if (tag == FlingNavigator.boundaryTag || rootBoundary) {
+      boundary = FlingNavigator.of(context).boundary;
+    } else if (tag != null) {
+      boundary = _allBoundariesFor(context)[tag];
+    }
+    if (boundary == null && context is StatefulElement && context.state is FlingBoundaryState) {
       boundary = context.state as FlingBoundaryState;
     }
-    if (rootBoundary) {
-      boundary = context.findRootAncestorStateOfType<FlingBoundaryState>() ?? boundary;
-    } else {
-      boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
-    }
+    boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
 
     assert(() {
       if (boundary == null) {
         throw FlutterError(
           'FlingBoundary operation requested with a context that does not include a FlingBoundary.\n'
-          'The context used to push boundarys from the FlingBoundary must be that of a '
+          'The context used to push boundaries from the FlingBoundary must be that of a '
           'widget that is a descendant of a FlingBoundary widget.',
         );
       }
@@ -830,24 +832,22 @@ class FlingBoundary extends StatefulWidget {
     return boundary!;
   }
 
-  // Returns a map of all of the boundarys in `context` indexed by FlingBoundary tag that
+  // Returns a map of all of the boundaries in `context` indexed by FlingBoundary tag that
   // should be considered for animation when `navigator` transitions from one
   // FlingBoundary to another.
-  static FlingBoundaryState _boundaryFor(BuildContext context, Object? tag) {
-    if (tag == null) {
-      return of(context);
-    }
+  static Map<Object, FlingBoundaryState> _allBoundariesFor(BuildContext context) {
+    final navigator = FlingNavigator.of(context);
     final result = <Object, FlingBoundaryState>{};
 
     void inviteFling(StatefulElement boundary, Object tag) {
       assert(() {
         if (result.containsKey(tag)) {
           throw FlutterError.fromParts(<DiagnosticsNode>[
-            ErrorSummary('There are multiple boundarys that share the same tag within a subtree.'),
+            ErrorSummary('There are multiple boundaries that share the same tag within a subtree.'),
             ErrorDescription(
-              'Within each subtree for which boundarys are to be animated (i.e. a FlingNavigator subtree), '
+              'Within each subtree for which boundaries are to be animated (i.e. a FlingNavigator subtree), '
               'each FlingBoundary must have a unique non-null tag.\n'
-              'In this case, multiple boundarys had the following tag: $tag',
+              'In this case, multiple boundaries had the following tag: $tag',
             ),
             DiagnosticsProperty<StatefulElement>(
               'Here is the subtree for one of the offending flings',
@@ -874,20 +874,8 @@ class FlingBoundary extends StatefulWidget {
       element.visitChildren(visitor);
     }
 
-    FlingNavigator.of(context).context.visitChildElements(visitor);
-
-    final boundary = result[tag];
-    assert(() {
-      if (boundary == null) {
-        throw FlutterError(
-          'FlingBoundary operation requested with a tag that does not include a FlingBoundary.\n'
-          'The tag used to push boundarys from the FlingBoundary must be that of a '
-          'widget that is a descendant of a FlingBoundary widget.',
-        );
-      }
-      return true;
-    }());
-    return boundary!;
+    navigator.context.visitChildElements(visitor);
+    return result;
   }
 
   /// push
@@ -898,7 +886,7 @@ class FlingBoundary extends StatefulWidget {
     required Object toTag,
   }) {
     FlingBoundary.of(context).push(
-      boundary: FlingBoundary._boundaryFor(context, boundaryTag),
+      boundary: FlingBoundary.of(context, tag: boundaryTag),
       fromTag: fromTag,
       toTag: toTag,
     );
@@ -994,7 +982,7 @@ class FlingController extends FlingNavigatorObserver {
     _maybeStartFlingTransition(navigator!._animation, fromBoundary, toBoundary, fromTag, toTag);
   }
 
-  // If we're transitioning between different page boundarys, start a fling transition
+  // If we're transitioning between different page boundaries, start a fling transition
   // after the toBoundary has been laid out with its animation's value at 1.0.
   void _maybeStartFlingTransition(
     Animation<double> animation,
