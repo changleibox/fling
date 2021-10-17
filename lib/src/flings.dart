@@ -171,6 +171,10 @@ class Fling extends StatefulWidget {
     final result = <Object, FlingState>{};
 
     void inviteFling(StatefulElement fling, Object tag) {
+      final flingState = fling.state as FlingState;
+      if (flingState.boundary.context != context) {
+        return;
+      }
       assert(() {
         if (result.containsKey(tag)) {
           throw FlutterError.fromParts(<DiagnosticsNode>[
@@ -186,10 +190,7 @@ class Fling extends StatefulWidget {
         }
         return true;
       }());
-      final flingState = fling.state as FlingState;
-      if (flingState.boundary.context == context) {
-        result[tag] = flingState;
-      }
+      result[tag] = flingState;
     }
 
     void visitor(Element element) {
