@@ -59,3 +59,5 @@ FlightShuttleTransition(
 );
 ```
 
+完整demo详见：https://github.com/changleibox/flutter_demo.git/
+
