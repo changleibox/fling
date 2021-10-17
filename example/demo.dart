@@ -46,7 +46,7 @@ class _MainPageState extends State<MainPage> {
       navigationBar: const CupertinoNavigationBar(
         middle: Text('测试'),
       ),
-      child: FlingWidgetsApp(
+      child: FlingNavigator(
         duration: const Duration(
           seconds: 3,
         ),
