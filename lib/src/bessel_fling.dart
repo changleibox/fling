@@ -13,8 +13,8 @@ typedef BesselFlightShuttleBuilder = Widget Function(
   double value,
   double edgeValue,
   double middleValue,
-  BuildContext fromFlingContext,
-  BuildContext toFlingContext,
+  Fling fromFling,
+  Fling toFling,
   Rect fromFlingLocation,
   Rect toFlingLocation,
 );
@@ -87,6 +87,8 @@ class BesselFling extends StatelessWidget {
     BuildContext fromFlingContext,
     BuildContext toFlingContext,
   ) {
+    final fromFling = fromFlingContext.widget as Fling;
+    final toFling = toFlingContext.widget as Fling;
     final fromFlingLocation = _boundingBoxFor(fromFlingContext);
     final toFlingLocation = _boundingBoxFor(toFlingContext);
     return AnimatedBuilder(
@@ -103,8 +105,8 @@ class BesselFling extends StatelessWidget {
           t,
           edgeValue,
           middleValue,
-          fromFlingContext,
-          toFlingContext,
+          fromFling,
+          toFling,
           fromFlingLocation,
           toFlingLocation,
         );

@@ -146,13 +146,11 @@ class _FlingBlock extends StatelessWidget {
           value,
           edgeValue,
           middleValue,
-          fromFlingContext,
-          toFlingContext,
+          fromFling,
+          toFling,
           fromFlingLocation,
           toFlingLocation,
         ) {
-          final fromFling = fromFlingContext.widget as Fling;
-          final toFling = toFlingContext.widget as Fling;
           final fling = middleValue == 1 ? toFling : fromFling;
           final child = (fling.child as _ContextBuilder).child as _ColorBlock;
           return Transform.rotate(
