@@ -209,8 +209,15 @@ class Fling extends StatefulWidget {
   }
 
   /// push
-  static void push(BuildContext context, {Object? boundaryTag, Object? tag, bool root = false}) {
-    Fling.of(context).push(context, boundaryTag: boundaryTag, tag: tag, root: root);
+  static void push(
+    BuildContext context, {
+    Object? boundaryTag,
+    required Object tag,
+  }) {
+    Fling.of(context).push(
+      boundary: FlingBoundary._boundaryFor(context, boundaryTag),
+      tag: tag,
+    );
   }
 
   @override
@@ -243,12 +250,15 @@ class FlingState extends State<Fling> {
   FlingBoundaryState get boundary => FlingBoundary.of(context);
 
   /// push
-  void push(BuildContext context, {Object? boundaryTag, Object? tag, bool root = false}) {
+  void push({
+    FlingBoundaryState? boundary,
+    required Object tag,
+  }) {
     FlingNavigator.of(context)._push(
-      fromBoundary: boundary,
-      toBoundary: root ? null : FlingBoundary._boundaryFor(context, boundaryTag),
-      tag: tag ?? widget.tag,
-      fromFling: this,
+      fromBoundary: this.boundary,
+      toBoundary: boundary,
+      fromTag: widget.tag,
+      toTag: tag,
     );
   }
 
@@ -572,7 +582,7 @@ class FlingNavigatorObserver {
   ///
   /// The boundary immediately below that one, and thus the previously active
   /// boundary, is `previousBoundary`.
-  void didPush(FlingBoundaryState boundary, FlingBoundaryState previousBoundary, Object tag, [FlingState? fromFling]) {}
+  void didPush(FlingBoundaryState fromBoundary, FlingBoundaryState toBoundary, Object fromTag, Object toTag) {}
 }
 
 /// 处理Fling
@@ -593,6 +603,9 @@ class FlingNavigator extends StatefulWidget {
 
   /// A list of observers for this navigator.
   final List<FlingNavigatorObserver> observers;
+
+  /// [FlingNavigator.boundary]
+  static Object get boundaryTag => _rootBoundaryTag;
 
   /// This method can be expensive (it walks the element tree).
   static FlingNavigatorState of(
@@ -624,11 +637,18 @@ class FlingNavigator extends StatefulWidget {
   }
 
   /// push
-  static void push(BuildContext context, {Object? fromBoundaryTag, Object? toBoundaryTag, required Object tag}) {
+  static void push(
+    BuildContext context, {
+    Object? fromBoundaryTag,
+    Object? toBoundaryTag,
+    required Object fromTag,
+    required Object toTag,
+  }) {
     FlingNavigator.of(context).push(
       fromBoundary: FlingBoundary._boundaryFor(context, fromBoundaryTag),
       toBoundary: FlingBoundary._boundaryFor(context, toBoundaryTag),
-      tag: tag,
+      fromTag: fromTag,
+      toTag: toTag,
     );
   }
 
@@ -671,21 +691,31 @@ class FlingNavigatorState extends State<FlingNavigator> with TickerProviderState
   OverlayState get overlay => _overlayKey.currentState!;
 
   /// push
-  void push({FlingBoundaryState? fromBoundary, FlingBoundaryState? toBoundary, required Object tag}) {
-    _push(fromBoundary: fromBoundary, toBoundary: toBoundary, tag: tag);
+  void push({
+    FlingBoundaryState? fromBoundary,
+    FlingBoundaryState? toBoundary,
+    required Object fromTag,
+    required Object toTag,
+  }) {
+    _push(
+      fromBoundary: fromBoundary,
+      toBoundary: toBoundary,
+      fromTag: fromTag,
+      toTag: toTag,
+    );
   }
 
   /// push
   void _push({
     FlingBoundaryState? fromBoundary,
     FlingBoundaryState? toBoundary,
-    required Object tag,
-    FlingState? fromFling,
+    required Object fromTag,
+    required Object toTag,
   }) {
     fromBoundary ??= boundary;
     toBoundary ??= boundary;
     for (var observer in _effectiveObservers) {
-      observer.didPush(toBoundary, fromBoundary, tag, fromFling);
+      observer.didPush(fromBoundary, toBoundary, fromTag, toTag);
     }
   }
 
@@ -738,8 +768,9 @@ class FlingNavigatorState extends State<FlingNavigator> with TickerProviderState
   Widget build(BuildContext context) {
     return FlingControllerScope(
       controller: _controller,
-      child: FlingBoundary.none(
+      child: FlingBoundary(
         key: _boundaryKey,
+        tag: _rootBoundaryTag,
         child: Overlay(
           key: _overlayKey,
           initialEntries: [
@@ -763,13 +794,6 @@ class FlingBoundary extends StatefulWidget {
     required this.child,
     required this.tag,
   }) : super(key: key);
-
-  /// 创建一个[Fling]边界
-  const FlingBoundary.none({
-    Key? key,
-    required this.child,
-  })  : tag = _rootBoundaryTag,
-        super(key: key);
 
   /// child
   final Widget child;
@@ -867,11 +891,16 @@ class FlingBoundary extends StatefulWidget {
   }
 
   /// push
-  static void push(BuildContext context, {Object? boundaryTag, required Object tag, bool root = false}) {
+  static void push(
+    BuildContext context, {
+    Object? boundaryTag,
+    required Object fromTag,
+    required Object toTag,
+  }) {
     FlingBoundary.of(context).push(
-      boundary: boundaryTag == null ? null : FlingBoundary._boundaryFor(context, boundaryTag),
-      tag: tag,
-      root: root,
+      boundary: FlingBoundary._boundaryFor(context, boundaryTag),
+      fromTag: fromTag,
+      toTag: toTag,
     );
   }
 
@@ -891,8 +920,17 @@ class FlingBoundaryState extends State<FlingBoundary> with TickerProviderStateMi
   FlingNavigatorState get navigator => FlingNavigator.of(context);
 
   /// push
-  void push({FlingBoundaryState? boundary, required Object tag, bool root = false}) {
-    navigator._push(fromBoundary: this, toBoundary: root ? null : (boundary ?? this), tag: tag);
+  void push({
+    FlingBoundaryState? boundary,
+    required Object fromTag,
+    required Object toTag,
+  }) {
+    navigator._push(
+      fromBoundary: this,
+      toBoundary: boundary,
+      fromTag: fromTag,
+      toTag: toTag,
+    );
   }
 
   /// Whether this route is currently offstage.
@@ -948,23 +986,23 @@ class FlingController extends FlingNavigatorObserver {
 
   @override
   void didPush(
-    FlingBoundaryState boundary,
-    FlingBoundaryState previousBoundary,
-    Object tag, [
-    FlingState? fromFling,
-  ]) {
-    _maybeStartFlingTransition(previousBoundary, boundary, navigator!._animation, tag, fromFling);
+    FlingBoundaryState fromBoundary,
+    FlingBoundaryState toBoundary,
+    Object fromTag,
+    Object toTag,
+  ) {
+    _maybeStartFlingTransition(navigator!._animation, fromBoundary, toBoundary, fromTag, toTag);
   }
 
   // If we're transitioning between different page boundarys, start a fling transition
   // after the toBoundary has been laid out with its animation's value at 1.0.
   void _maybeStartFlingTransition(
+    Animation<double> animation,
     FlingBoundaryState fromBoundary,
     FlingBoundaryState toBoundary,
-    Animation<double> animation,
-    Object tag, [
-    FlingState? fromFling,
-  ]) {
+    Object fromTag,
+    Object toTag,
+  ) {
     final from = fromBoundary;
     final to = toBoundary;
 
@@ -979,19 +1017,19 @@ class FlingController extends FlingNavigatorObserver {
     to.offstage = animation.value == 0.0;
 
     WidgetsBinding.instance!.addPostFrameCallback((Duration value) {
-      _startFlingTransition(from, to, animation, tag, fromFling);
+      _startFlingTransition(animation, from, to, fromTag, toTag);
     });
   }
 
   // Find the matching pairs of flings in from and to and either start or a new
   // fling flight, or divert an existing one.
   void _startFlingTransition(
+    Animation<double> animation,
     FlingBoundaryState from,
     FlingBoundaryState to,
-    Animation<double> animation,
-    Object tag, [
-    FlingState? fromFling,
-  ]) {
+    Object fromTag,
+    Object toTag,
+  ) {
     // If the `to` route was offstage, then we're implicitly restoring its
     // animation value back to what it was before it was "moved" offstage.
     to.offstage = false;
@@ -1022,11 +1060,11 @@ class FlingController extends FlingNavigatorObserver {
     // If `fromSubtreeContext` is null, call endFlight on all toFlings, for good measure.
     // If `toSubtreeContext` is null abort existingFlights.
     final fromFlings = Fling._allFlingsFor(from.context);
-    if (!fromFlings.containsKey(tag) && from.widget.tag != _rootBoundaryTag) {
+    if (!fromFlings.containsKey(fromTag) && from.widget.tag != _rootBoundaryTag) {
       fromFlings.addAll(Fling._allFlingsFor(navigator.boundary.context));
     }
     final toFlings = Fling._allFlingsFor(to.context);
-    if (!toFlings.containsKey(tag) && to.widget.tag != _rootBoundaryTag) {
+    if (!toFlings.containsKey(toTag) && to.widget.tag != _rootBoundaryTag) {
       toFlings.addAll(Fling._allFlingsFor(navigator.boundary.context));
     }
 
@@ -1053,12 +1091,12 @@ class FlingController extends FlingNavigatorObserver {
       // Only proceed with a valid manifest. Otherwise abort the existing
       // flight, and call endFlight when this for loop finishes.
       if (manifest != null && manifest.isValid) {
-        toFlings.remove(tag);
+        toFlings.remove(toTag);
         _FlingFlight().start(manifest);
       }
     }
 
-    flight(fromFling ?? fromFlings[tag], toFlings[tag]);
+    flight(fromFlings[fromTag], toFlings[toTag]);
 
     for (final toFling in toFlings.values) {
       toFling._endFlight();
