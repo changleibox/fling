@@ -31,8 +31,6 @@ typedef FlingFlightShuttleBuilder = Widget Function(
   Animation<double> animation,
   BuildContext fromFlingContext,
   BuildContext toFlingContext,
-  Rect fromFlingLocation,
-  Rect toFlingLocation,
 );
 
 const _rootBoundaryTag = Object();
@@ -452,8 +450,6 @@ class _FlingFlight {
       manifest.animation,
       manifest.fromFling.context,
       manifest.toFling.context,
-      manifest.fromFlingLocation,
-      manifest.toFlingLocation,
     );
     assert(shuttle != null);
 
@@ -1097,8 +1093,6 @@ class FlingController extends FlingNavigatorObserver {
     Animation<double> animation,
     BuildContext fromFlingContext,
     BuildContext toFlingContext,
-    Rect fromFlingLocation,
-    Rect toFlingLocation,
   ) {
     final toFling = toFlingContext.widget as Fling;
     return toFling.child;
