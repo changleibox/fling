@@ -566,7 +566,7 @@ class FlingNavigatorObserver {
   /// boundary, is `previousBoundary`.
   void didPush(
     FlingBoundaryState boundary,
-    FlingBoundaryState? previousBoundary,
+    FlingBoundaryState previousBoundary,
     Object tag, [
     FlingState? fromFling,
   ]) {}
@@ -980,7 +980,7 @@ class FlingController extends FlingNavigatorObserver {
   @override
   void didPush(
     FlingBoundaryState boundary,
-    FlingBoundaryState? previousBoundary,
+    FlingBoundaryState previousBoundary,
     Object tag, [
     FlingState? fromFling,
   ]) {
@@ -990,8 +990,8 @@ class FlingController extends FlingNavigatorObserver {
   // If we're transitioning between different page boundarys, start a fling transition
   // after the toBoundary has been laid out with its animation's value at 1.0.
   void _maybeStartFlingTransition(
-    FlingBoundaryState? fromBoundary,
-    FlingBoundaryState? toBoundary,
+    FlingBoundaryState fromBoundary,
+    FlingBoundaryState toBoundary,
     Animation<double> animation,
     Object tag, [
     FlingState? fromFling,
@@ -1007,10 +1007,10 @@ class FlingController extends FlingNavigatorObserver {
     // Putting a route offstage changes its animation value to 1.0. Once this
     // frame completes, we'll know where the heroes in the `to` route are
     // going to end up, and the `to` route will go back onstage.
-    to!.offstage = animation.value == 0.0;
+    to.offstage = animation.value == 0.0;
 
     WidgetsBinding.instance!.addPostFrameCallback((Duration value) {
-      _startFlingTransition(from!, to, animation, tag, fromFling);
+      _startFlingTransition(from, to, animation, tag, fromFling);
     });
   }
 
