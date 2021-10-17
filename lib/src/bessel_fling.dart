@@ -15,6 +15,8 @@ typedef BesselFlightShuttleBuilder = Widget Function(
   double middleValue,
   BuildContext fromFlingContext,
   BuildContext toFlingContext,
+  Rect fromFlingLocation,
+  Rect toFlingLocation,
 );
 
 /// Created by box on 2021/10/17.
@@ -66,12 +68,27 @@ class BesselFling extends StatelessWidget {
   /// [Fling.onEndFlight]
   final ValueChanged<Size>? onEndFlight;
 
+  // The bounding box for `context`'s render object,  in `ancestorContext`'s
+  // render object's coordinate space.
+  static Rect _boundingBoxFor(BuildContext context) {
+    final flingState = (context as StatefulElement).state as FlingState;
+    final ancestorContext = flingState.boundary.navigator.context;
+    final box = context.findRenderObject()! as RenderBox;
+    assert(box.hasSize && box.size.isFinite);
+    return MatrixUtils.transformRect(
+      box.getTransformTo(ancestorContext.findRenderObject()),
+      Offset.zero & box.size,
+    );
+  }
+
   Widget _buildFlightShuttle(
     BuildContext flightContext,
     Animation<double> animation,
     BuildContext fromFlingContext,
     BuildContext toFlingContext,
   ) {
+    final fromFlingLocation = _boundingBoxFor(fromFlingContext);
+    final toFlingLocation = _boundingBoxFor(toFlingContext);
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
@@ -88,6 +105,8 @@ class BesselFling extends StatelessWidget {
           middleValue,
           fromFlingContext,
           toFlingContext,
+          fromFlingLocation,
+          toFlingLocation,
         );
       },
     );

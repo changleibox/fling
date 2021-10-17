@@ -141,7 +141,16 @@ class _FlingBlock extends StatelessWidget {
         middleCurve: _middleInterval,
         endCurve: _endInterval,
         flightSize: _flightShuttleSize,
-        flightShuttleBuilder: (context, value, edgeValue, middleValue, fromFlingContext, toFlingContext) {
+        flightShuttleBuilder: (
+          context,
+          value,
+          edgeValue,
+          middleValue,
+          fromFlingContext,
+          toFlingContext,
+          fromFlingLocation,
+          toFlingLocation,
+        ) {
           final fromFling = fromFlingContext.widget as Fling;
           final toFling = toFlingContext.widget as Fling;
           final fling = middleValue == 1 ? toFling : fromFling;
