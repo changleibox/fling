@@ -923,23 +923,13 @@ class FlingBoundaryState extends State<FlingBoundary> with TickerProviderStateMi
   /// On the first frame of a route's entrance transition, the route is built
   /// [Offstage] using an animation progress of 1.0. The route is invisible and
   /// non-interactive, but each widget has its final size and position. This
-  /// mechanism lets the [HeroController] determine the final local of any hero
+  /// mechanism lets the [FlingController] determine the final local of any hero
   /// widgets being animated as part of the transition.
-  ///
-  /// The modal barrier, if any, is not rendered if [offstage] is true (see
-  /// [barrierColor]).
-  ///
-  /// Whenever this changes value, [changedInternalState] is called.
-  bool get offstage => _offstage;
-  bool _offstage = false;
+  final offstageNotifier = ValueNotifier<bool>(false);
 
+  /// Whether this route is currently offstage.
   set offstage(bool value) {
-    if (_offstage == value) {
-      return;
-    }
-    setState(() {
-      _offstage = value;
-    });
+    offstageNotifier.value = value;
   }
 
   @override
