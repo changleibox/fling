@@ -33,6 +33,8 @@ typedef FlingFlightShuttleBuilder = Widget Function(
   BuildContext toFlingContext,
 );
 
+const _caretAnimationDuration = Duration(milliseconds: 100);
+const _caretAnimationCurve = Curves.fastOutSlowIn;
 const _rootBoundaryTag = Object();
 
 /// Created by changlei on 2021/10/15.
@@ -500,10 +502,31 @@ class _FlingFlight {
   }
 
   void onTick() {
+    final RenderBox? fromFlingBox;
+    if (!_aborted && manifest.fromFling.mounted) {
+      fromFlingBox = manifest.fromFling.context.findRenderObject() as RenderBox?;
+    } else {
+      fromFlingBox = null;
+    }
+
+    // Try to find the new origin of the fromFling, if the flight isn't aborted.
+    final Offset? fromFlingOrigin;
+    if (fromFlingBox != null && fromFlingBox.attached && fromFlingBox.hasSize) {
+      fromFlingBox.showOnScreen(
+        duration: _caretAnimationDuration,
+        curve: _caretAnimationCurve,
+      );
+      fromFlingOrigin = fromFlingBox.localToGlobal(
+        Offset.zero,
+        ancestor: manifest.overlay.context.findRenderObject() as RenderBox?,
+      );
+    } else {
+      fromFlingOrigin = null;
+    }
+
     final RenderBox? toFlingBox;
     if (!_aborted && manifest.toFling.mounted) {
       toFlingBox = manifest.toFling.context.findRenderObject() as RenderBox?;
-      toFlingBox?.showOnScreen(duration: const Duration(milliseconds: 150));
     } else {
       toFlingBox = null;
     }
@@ -511,6 +534,10 @@ class _FlingFlight {
     // Try to find the new origin of the toFling, if the flight isn't aborted.
     final Offset? toFlingOrigin;
     if (toFlingBox != null && toFlingBox.attached && toFlingBox.hasSize) {
+      toFlingBox.showOnScreen(
+        duration: _caretAnimationDuration,
+        curve: _caretAnimationCurve,
+      );
       toFlingOrigin = toFlingBox.localToGlobal(
         Offset.zero,
         ancestor: manifest.overlay.context.findRenderObject() as RenderBox?,
@@ -519,14 +546,26 @@ class _FlingFlight {
       toFlingOrigin = null;
     }
 
+    var originChanged = false;
+    if (fromFlingOrigin != null && fromFlingOrigin.isFinite) {
+      originChanged = true;
+      // If the new origin of fromFling is available and also paintable, try to
+      // update flingRectTween with it.
+      if (fromFlingOrigin != flingRectTween.begin!.topLeft) {
+        final flingRectBegin = fromFlingOrigin & flingRectTween.begin!.size;
+        flingRectTween = manifest.createFlingRectTween(begin: flingRectBegin, end: flingRectTween.end);
+      }
+    }
     if (toFlingOrigin != null && toFlingOrigin.isFinite) {
+      originChanged = true;
       // If the new origin of toFling is available and also paintable, try to
       // update flingRectTween with it.
       if (toFlingOrigin != flingRectTween.end!.topLeft) {
         final flingRectEnd = toFlingOrigin & flingRectTween.end!.size;
         flingRectTween = manifest.createFlingRectTween(begin: flingRectTween.begin, end: flingRectEnd);
       }
-    } else if (_flingOpacity.isCompleted) {
+    }
+    if (!originChanged && _flingOpacity.isCompleted) {
       // The toFling no longer exists or it's no longer the flight's destination.
       // Continue flying while fading out.
       _flingOpacity = _proxyAnimation.drive(
