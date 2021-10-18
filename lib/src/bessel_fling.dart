@@ -31,7 +31,7 @@ class BesselFling extends StatelessWidget {
     required this.beginCurve,
     required this.middleCurve,
     required this.endCurve,
-    required this.flightSize,
+    this.flightSize,
     this.flightShuttleBuilder,
     this.placeholderBuilder,
     this.onStartFlight,
@@ -54,7 +54,7 @@ class BesselFling extends StatelessWidget {
   final Curve endCurve;
 
   /// flightSize
-  final Size flightSize;
+  final Size? flightSize;
 
   /// [Fling.flightShuttleBuilder]
   final BesselFlightShuttleBuilder? flightShuttleBuilder;
@@ -159,7 +159,7 @@ class BesselRectTween extends RectTween {
   final Curve endCurve;
 
   /// flightSize
-  final Size flightSize;
+  final Size? flightSize;
 
   @override
   Rect? lerp(double t) {
@@ -168,14 +168,14 @@ class BesselRectTween extends RectTween {
     final endValue = endCurve.transform(t);
     final edgeValue = endValue > 0 ? endValue : 1 - beginValue;
     final bounds = endValue > 0 ? end : begin;
-    final size = Size.lerp(flightSize, bounds?.size, edgeValue);
+    final size = Size.lerp(flightSize ?? begin?.size, bounds?.size, edgeValue);
     final center = size?.center(Offset.zero);
     final beginCenter = begin?.center;
     final endCenter = end?.center;
     final beginOffset = beginCenter == null || center == null ? null : (beginCenter - center);
     final endOffset = endCenter == null || center == null ? null : (endCenter - center);
     final offset = bessel(beginOffset, endOffset, middleValue);
-    return offset == null || size == null ? null : (offset & size);
+    return offset == null || size == null ? super.lerp(t) : (offset & size);
   }
 
   /// 构建贝塞尔曲线
