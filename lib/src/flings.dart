@@ -638,6 +638,7 @@ class FlingNavigator extends StatefulWidget {
     required this.child,
     this.duration = const Duration(milliseconds: 600),
     this.observers = const <FlingNavigatorObserver>[],
+    this.rootOverlay = false,
   }) : super(key: key);
 
   /// child
@@ -648,6 +649,9 @@ class FlingNavigator extends StatefulWidget {
 
   /// A list of observers for this navigator.
   final List<FlingNavigatorObserver> observers;
+
+  /// rootOverlay
+  final bool rootOverlay;
 
   /// This method can be expensive (it walks the element tree).
   static FlingNavigatorState of(
@@ -702,7 +706,6 @@ class FlingNavigator extends StatefulWidget {
 class FlingNavigatorState extends State<FlingNavigator> with TickerProviderStateMixin {
   final _animations = <Duration, Iterable<AnimationController>>{};
   final _boundaryKey = GlobalKey<FlingBoundaryState>();
-  final _overlayKey = GlobalKey<OverlayState>();
   final _controller = FlingController();
 
   late List<FlingNavigatorObserver> _effectiveObservers;
@@ -730,7 +733,7 @@ class FlingNavigatorState extends State<FlingNavigator> with TickerProviderState
   FlingBoundaryState get boundary => _boundaryKey.currentState!;
 
   /// overlay
-  OverlayState get overlay => _overlayKey.currentState!;
+  OverlayState get overlay => Overlay.of(context, rootOverlay: widget.rootOverlay)!;
 
   /// push
   void push({
@@ -813,16 +816,7 @@ class FlingNavigatorState extends State<FlingNavigator> with TickerProviderState
       child: FlingBoundary(
         key: _boundaryKey,
         tag: _rootBoundaryTag,
-        child: Overlay(
-          key: _overlayKey,
-          initialEntries: [
-            OverlayEntry(
-              builder: (context) {
-                return widget.child;
-              },
-            ),
-          ],
-        ),
+        child: widget.child,
       ),
     );
   }
