@@ -35,7 +35,16 @@ typedef FlingFlightShuttleBuilder = Widget Function(
 
 const _caretAnimationDuration = Duration(milliseconds: 100);
 const _caretAnimationCurve = Curves.fastOutSlowIn;
-const _rootBoundaryTag = Object();
+const _rootBoundaryTag = _BoundaryTag();
+
+class _BoundaryTag {
+  const _BoundaryTag();
+
+  @override
+  String toString() {
+    return 'rootBoundaryTag';
+  }
+}
 
 /// Created by changlei on 2021/10/15.
 ///
