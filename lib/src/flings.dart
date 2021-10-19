@@ -733,7 +733,21 @@ class FlingNavigatorState extends State<FlingNavigator> with TickerProviderState
   FlingBoundaryState get boundary => _boundaryKey.currentState!;
 
   /// overlay
-  OverlayState get overlay => Overlay.of(context, rootOverlay: widget.rootOverlay)!;
+  OverlayState get overlay {
+    var overlay = Overlay.of(context, rootOverlay: widget.rootOverlay);
+    if (overlay == null) {
+      void visitor(Element element) {
+        if (element.widget is Overlay) {
+          overlay = (element as StatefulElement).state as OverlayState;
+        } else {
+          element.visitChildElements(visitor);
+        }
+      }
+
+      context.visitChildElements(visitor);
+    }
+    return overlay!;
+  }
 
   /// push
   void push({
