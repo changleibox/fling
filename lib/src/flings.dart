@@ -153,12 +153,7 @@ class Fling extends StatefulWidget {
 
   /// This method can be expensive (it walks the element tree).
   static FlingState of(BuildContext context) {
-    // Handles the case where the input context is a fling element.
-    FlingState? fling;
-    if (context is StatefulElement && context.state is FlingState) {
-      fling = context.state as FlingState;
-    }
-    fling = fling ?? context.findAncestorStateOfType<FlingState>();
+    final fling = maybeOf(context);
 
     assert(() {
       if (fling == null) {
@@ -171,6 +166,17 @@ class Fling extends StatefulWidget {
       return true;
     }());
     return fling!;
+  }
+
+  /// This method can be expensive (it walks the element tree).
+  static FlingState? maybeOf(BuildContext context) {
+    // Handles the case where the input context is a fling element.
+    FlingState? fling;
+    if (context is StatefulElement && context.state is FlingState) {
+      fling = context.state as FlingState;
+    }
+    fling = fling ?? context.findAncestorStateOfType<FlingState>();
+    return fling;
   }
 
   // Returns a map of all of the flings in `context` indexed by fling tag that
@@ -658,16 +664,7 @@ class FlingNavigator extends StatefulWidget {
     BuildContext context, {
     bool rootNavigator = false,
   }) {
-    // Handles the case where the input context is a navigator element.
-    FlingNavigatorState? navigator;
-    if (context is StatefulElement && context.state is FlingNavigatorState) {
-      navigator = context.state as FlingNavigatorState;
-    }
-    if (rootNavigator) {
-      navigator = context.findRootAncestorStateOfType<FlingNavigatorState>() ?? navigator;
-    } else {
-      navigator = navigator ?? context.findAncestorStateOfType<FlingNavigatorState>();
-    }
+    final navigator = maybeOf(context);
 
     assert(() {
       if (navigator == null) {
@@ -680,6 +677,24 @@ class FlingNavigator extends StatefulWidget {
       return true;
     }());
     return navigator!;
+  }
+
+  /// This method can be expensive (it walks the element tree).
+  static FlingNavigatorState? maybeOf(
+    BuildContext context, {
+    bool rootNavigator = false,
+  }) {
+    // Handles the case where the input context is a navigator element.
+    FlingNavigatorState? navigator;
+    if (context is StatefulElement && context.state is FlingNavigatorState) {
+      navigator = context.state as FlingNavigatorState;
+    }
+    if (rootNavigator) {
+      navigator = context.findRootAncestorStateOfType<FlingNavigatorState>() ?? navigator;
+    } else {
+      navigator = navigator ?? context.findAncestorStateOfType<FlingNavigatorState>();
+    }
+    return navigator;
   }
 
   /// push
@@ -859,18 +874,7 @@ class FlingBoundary extends StatefulWidget {
     BuildContext context, {
     Object? tag,
   }) {
-    // Handles the case where the input context is a boundary element.
-    FlingBoundaryState? boundary;
-    if (tag == rootBoundaryTag) {
-      boundary = FlingNavigator.of(context).boundary;
-    } else if (tag != null) {
-      boundary = _allBoundariesFor(context)[tag];
-    } else {
-      if (boundary == null && context is StatefulElement && context.state is FlingBoundaryState) {
-        boundary = context.state as FlingBoundaryState;
-      }
-      boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
-    }
+    final boundary = maybeOf(context, tag: tag);
 
     final target = tag == null ? 'context' : 'tag: $tag';
     assert(() {
@@ -884,6 +888,26 @@ class FlingBoundary extends StatefulWidget {
       return true;
     }());
     return boundary!;
+  }
+
+  /// This method can be expensive (it walks the element tree).
+  static FlingBoundaryState? maybeOf(
+    BuildContext context, {
+    Object? tag,
+  }) {
+    // Handles the case where the input context is a boundary element.
+    FlingBoundaryState? boundary;
+    if (tag == rootBoundaryTag) {
+      boundary = FlingNavigator.of(context).boundary;
+    } else if (tag != null) {
+      boundary = _allBoundariesFor(context)[tag];
+    } else {
+      if (boundary == null && context is StatefulElement && context.state is FlingBoundaryState) {
+        boundary = context.state as FlingBoundaryState;
+      }
+      boundary = boundary ?? context.findAncestorStateOfType<FlingBoundaryState>();
+    }
+    return boundary;
   }
 
   // Returns a map of all of the boundaries in `context` indexed by FlingBoundary tag that
