@@ -1151,9 +1151,13 @@ class FlingController extends FlingNavigatorObserver {
       }
     }
 
-    flight(fromFlings[fromTag], toFlings[toTag]);
+    final fromFling = fromFlings[fromTag];
+    flight(fromFling, toFlings[toTag]);
 
     for (final toFling in toFlings.values) {
+      if (toFling == fromFling) {
+        continue;
+      }
       toFling._endFlight();
     }
   }
