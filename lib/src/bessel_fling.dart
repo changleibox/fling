@@ -118,6 +118,8 @@ class BesselFling extends StatelessWidget {
   Widget build(BuildContext context) {
     return Fling(
       tag: tag,
+      onStartFlight: onStartFlight,
+      onEndFlight: onEndFlight,
       placeholderBuilder: (context, flingSize, child) {
         return placeholderBuilder?.call(context, flingSize, child) ?? child;
       },
