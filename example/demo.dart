@@ -5,7 +5,6 @@
 import 'dart:math' as math;
 
 import 'package:fling/fling.dart';
-import 'package:fling/src/bessel_fling.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
