@@ -325,10 +325,10 @@ class FlingState extends State<Fling> {
 
   @override
   Widget build(BuildContext context) {
-    assert(
-      context.findAncestorWidgetOfExactType<Fling>() == null,
-      'A Fling widget cannot be the descendant of another Fling widget.',
-    );
+    // assert(
+    //   context.findAncestorWidgetOfExactType<Fling>() == null,
+    //   'A Fling widget cannot be the descendant of another Fling widget.',
+    // );
 
     final showPlaceholder = _placeholderSize != null;
 
