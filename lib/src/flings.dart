@@ -1071,7 +1071,7 @@ class FlingController extends FlingNavigatorObserver {
     // going to end up, and the `to` route will go back onstage.
     to.offstage = animation.value == 0.0;
 
-    WidgetsBinding.instance!.addPostFrameCallback((Duration value) {
+    WidgetsBinding.instance.addPostFrameCallback((Duration value) {
       _startFlingTransition(animation, from, to, fromTag, toTag);
     });
   }
